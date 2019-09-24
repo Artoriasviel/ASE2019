@@ -1,0 +1,618 @@
+#include "TATAS.h"
+#include <vector>
+
+#include <stdio.h>
+#include <iostream>
+template <class T>
+class list_seq  
+  ;
+template <class T>
+class list_node  
+  {
+    private:
+    T value;
+    list_node<T>* prev;
+    list_node<T>* next;
+    friend class list_seq<T>;
+    private:
+    mutable TATAS lock1;
+  };
+template <class T>
+class new_iterator  
+  {
+    mutable TATAS locknode;
+    public:
+    list_node<T>* node;
+    public:
+    new_iterator ()  {
+       node = NULL;
+    }
+    public:
+    new_iterator (const new_iterator& mid)  {
+       node = mid.node;
+    }
+    bool operator !=(new_iterator mid) {
+       
+       {
+         AcquireLock acq_node(locknode);
+         return node!=mid.node;
+       }
+    }
+    bool operator ==(new_iterator mid) {
+       
+       {
+         AcquireLock acq_node(locknode);
+         return node==mid.node;
+       }
+    }
+    new_iterator& operator ++(int) {
+       
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_node(locknode);
+         if (node != 0)  acq_1.lock(node->lock1);
+         node = node->next;
+       }
+       return *this;
+    }
+    new_iterator operator +(int n) {
+       
+       new_iterator it;
+       {
+         AcquireLock acq_node(locknode);
+         it.node = node;
+         while (n>0)  
+           {
+              it.node = it.node->next;
+              n--;
+           }
+       }
+       return it;
+    }
+    new_iterator& operator --(int) {
+       
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_node(locknode);
+         if (node != 0)  acq_1.lock(node->lock1);
+         node = node->prev;
+       }
+       return *this;
+    }
+    T& operator *() {
+       
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_node(locknode);
+         if (node != 0)  acq_1.lock(node->lock1);
+         return node->value;
+       }
+    }
+  };
+template <class T>
+class list_seq  
+  {
+    mutable TATAS lockcounter;
+    mutable TATAS locknil;
+    mutable TATAS locktailp;
+    mutable TATAS lockheadp;
+    public:
+    list_node<T>* headp;
+    list_node<T>* tailp;
+    list_node<T>* nil;
+    std::size_t counter;
+    typedef T value_type;
+    typedef T& reference;
+    typedef std::size_t size_type;
+    public:
+    list_seq ()  {
+       nil = new list_node<T> ();
+       nil->prev = nil->next = nil;
+       headp = tailp = nil;
+       counter = 0;
+    }
+    ~list_seq() {
+       list_node<T>* p=headp;list_node<T>* q;
+       while (p!=nil)  
+         {
+            q = p;
+            p = p->next;
+            delete q;
+         }
+       delete p;
+    }
+    typedef new_iterator<T> iterator;
+    iterator begin() {
+       
+       iterator it;
+       {
+         AcquireLock acq_headp(lockheadp);
+         it.node = headp;
+       }
+       return it;
+    }
+    iterator end() {
+       
+       iterator it;
+       {
+         AcquireLock acq_nil(locknil);
+         it.node = nil;
+       }
+       return it;
+    }
+    std::size_t size() {
+       
+       {
+         AcquireLock acq_counter(lockcounter);
+         return counter;
+       }
+    }
+    bool empty() {
+       
+       {
+         AcquireLock acq_counter(lockcounter);
+         return counter<1;
+       }
+    }
+    reference operator [](std::size_t n) {
+       
+       int i;
+       list_node<T>* p;
+       for (i = 0,p = headp; i<n&&p!=nil; i++,p = p->next) 
+         {
+            
+         }
+       {
+         
+         return p->value;
+       }
+    }
+    reference front() {
+       
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_headp(lockheadp);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         return headp->value;
+       }
+    }
+    reference back() {
+       
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_tailp(locktailp);
+         if (tailp != 0)  acq_1.lock(tailp->lock1);
+         return tailp->value;
+       }
+    }
+    void push_front(T x) {
+       
+       list_node<T>* new_node=new list_node<T> ();
+       new_node->value = x;
+       new_node->prev = new_node;
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_counter(lockcounter);
+         AcquireLock acq_tailp(locktailp);
+         AcquireLock acq_headp(lockheadp);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         new_node->next = headp;
+         headp->prev = new_node;
+         headp = new_node;
+         if (counter==0)  
+           {
+              tailp = new_node;
+           }
+         counter++;
+       }
+    }
+    void push_back(T x) {
+       
+       list_node<T>* new_node=new list_node<T> ();
+       new_node->value = x;
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_counter(lockcounter);
+         AcquireLock acq_nil(locknil);
+         AcquireLock acq_tailp(locktailp);
+         AcquireLock acq_headp(lockheadp);
+         if (nil != 0)  acq_1.lock(nil->lock1);
+         if (tailp != 0)  acq_1.lock(tailp->lock1);
+         if (counter==0)  
+           {
+              headp = tailp = new_node;
+              new_node->prev = new_node;
+              new_node->next = nil;
+              nil->prev = new_node;
+           }
+         else  
+           {
+              new_node->next = nil;
+              new_node->prev = tailp;
+              nil->prev = new_node;
+              tailp->next = new_node;
+              tailp = new_node;
+           }
+         counter++;
+       }
+    }
+    T pop_front() {
+       
+       T res;
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_counter(lockcounter);
+         AcquireLock acq_nil(locknil);
+         AcquireLock acq_tailp(locktailp);
+         AcquireLock acq_headp(lockheadp);
+         if (nil != 0)  acq_1.lock(nil->lock1);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         return res;
+         if (counter>1)  
+           {
+              res = headp->value;
+              list_node<T>* tmp_headp=headp;
+              headp = headp->next;
+              headp->prev = headp;
+              
+              counter--;
+           }
+         else if (counter==1)  
+           {
+              list_node<T>* tmp_headp=headp;
+              headp = tailp = nil;
+              nil->prev = nil;
+              res = tmp_headp->value;
+              
+              counter--;
+           }
+       }
+    }
+    T pop_back() {
+       
+       T res;
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_counter(lockcounter);
+         AcquireLock acq_nil(locknil);
+         AcquireLock acq_tailp(locktailp);
+         AcquireLock acq_headp(lockheadp);
+         if (nil != 0)  acq_1.lock(nil->lock1);
+         if (tailp != 0)  acq_1.lock(tailp->lock1);
+         if (tailp != 0)  acq_1.lock(tailp->lock1);
+         if (tailp != 0)  acq_1.lock(tailp->lock1);
+         return res;
+         if (counter>1)  
+           {
+              res = tailp->value;
+              list_node<T>* tmp_tailp=tailp;
+              tailp = tailp->prev;
+              tailp->next = nil;
+              nil->prev = tailp;
+              
+              counter--;
+           }
+         else if (counter==1)  
+           {
+              res = tailp->value;
+              list_node<T>* tmp_tailp=tailp;
+              headp = tailp = nil;
+              nil->prev = nil;
+              
+              counter--;
+           }
+       }
+    }
+    iterator insert(iterator pos,T x) {
+       
+       list_node<T>* new_node=new list_node<T> ();
+       new_node->value = x;
+       iterator it;
+       it.node = new_node;
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_counter(lockcounter);
+         AcquireLock acq_nil(locknil);
+         AcquireLock acq_tailp(locktailp);
+         AcquireLock acq_headp(lockheadp);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         if (pos.node==headp)  
+           {
+              new_node->next = headp;
+              new_node->prev = new_node;
+              headp->prev = new_node;
+              headp = new_node;
+              if (counter==0)  
+                {
+                   tailp = new_node;
+                }
+           }
+         else  
+           {
+              list_node<T>* new_prev=pos.node->prev;
+              new_node->prev = new_prev;
+              new_node->next = pos.node;
+              new_prev->next = new_node;
+              pos.node->prev = new_node;
+              if (pos.node==nil)  
+                {
+                   tailp = new_node;
+                }
+           }
+         counter++;
+       }
+       return it;
+    }
+    iterator erase(iterator pos) {
+       
+       new_iterator<T> __ret__23;
+       list_node<T>* curr=pos.node;
+       {
+         AcquireLock acq_1;
+         AcquireLock acq_counter(lockcounter);
+         AcquireLock acq_tailp(locktailp);
+         AcquireLock acq_headp(lockheadp);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         if (headp != 0)  acq_1.lock(headp->lock1);
+         if (curr==headp)  
+           {
+              headp = headp->next;
+              headp->prev = headp;
+              if (counter==1)  
+                {
+                   tailp = headp;
+                }
+              counter--;
+              
+              iterator it;
+              it.node = headp;
+              __ret__23 = it;
+           }
+         else  
+           {
+              list_node<T>* tmp_prev=curr->prev;
+              list_node<T>* tmp_next=curr->next;
+              tmp_next->prev = tmp_prev;
+              tmp_prev->next = tmp_next;
+              if (curr==tailp)  
+                {
+                   tailp = tmp_prev;
+                }
+              
+              counter--;
+              iterator it;
+              it.node = tmp_next;
+              __ret__23 = it;
+           }
+       }
+       return __ret__23;
+    }
+    iterator find(T t) {
+       
+       iterator it;
+       iterator _b4_it;
+       new_iterator<T> __ret__8;
+       iterator _b3_it;
+       __ret__8 = _b3_it;
+       while (_b3_it!=__ret__8)  
+         {
+            if (*_b3_it==t)  
+              {
+                 break;
+              }
+            else  
+              {
+                 _b3_it++;
+              }
+         }
+       {
+         AcquireLock acq_nil(locknil);
+         AcquireLock acq_headp(lockheadp);
+         _b4_it.node = headp;
+         _b3_it.node = nil;
+       }
+       return it;
+    }
+    void bubble_sort() {
+       
+       iterator mark;
+       iterator min_mark;
+       iterator start;
+       iterator _b9_it;
+       start = _b9_it;
+       T tmp;
+       new_iterator<T> __ret__10;
+       iterator _b6_it;
+       __ret__10 = _b6_it;
+       {
+         AcquireLock acq_nil(locknil);
+         AcquireLock acq_headp(lockheadp);
+         _b9_it.node = headp;
+         _b6_it.node = nil;
+         while (start!=__ret__10)  
+           {
+              min_mark = start;
+              mark = start;
+              mark++;
+              {
+                 new_iterator<T> __ret__9;
+                 iterator _b6_it;
+                 _b6_it.node = nil;
+                 __ret__9 = _b6_it;
+                 while (mark!=__ret__9)  
+                   {
+                      if (*mark<*min_mark)  
+                        {
+                           min_mark = mark;
+                        }
+                      mark++;
+                   }
+              }
+              if (min_mark!=start)  
+                {
+                   tmp = *min_mark;
+                   *min_mark = *start;
+                   *start = tmp;
+                }
+              start++;
+           }
+       }
+    }
+    void merge_sort() {
+       
+       iterator _b11_it;
+       {
+         AcquireLock acq_headp(lockheadp);
+         _b11_it.node = headp;
+       }
+    }
+    private:
+    void sub_merge_sort_copy(iterator range_start,int n) {
+       T tmp;
+       if (n==1)  
+         {
+            return ;
+         }
+       else if (n==2)  
+         {
+            iterator range_end=range_start+1;
+            if (*range_end<*range_start)  
+              {
+                 tmp = *range_start;
+                 *range_start = *range_end;
+                 *range_end = tmp;
+              }
+         }
+       else  
+         {
+            iterator it_i=range_start;
+            iterator it_j=range_start+n/2;
+            int i=0;int j=0;int k=0;
+            int while_i=n/2;
+            int while_j=n-n/2;
+            sub_merge_sort_copy(it_i,while_i);
+            sub_merge_sort_copy(it_j,while_j);
+            T tmp_array[n];
+            while (i<while_i&&j<while_j)  
+              {
+                 if (*it_i<*it_j)  
+                   {
+                      tmp_array[k] = *it_i;
+                      it_i++;
+                      i++;
+                   }
+                 else  
+                   {
+                      tmp_array[k] = *it_j;
+                      it_j++;
+                      j++;
+                   }
+                 k++;
+              }
+            while (i<while_i)  
+              {
+                 tmp_array[k] = *it_i;
+                 k++;
+                 i++;
+                 it_i++;
+              }
+            while (j<while_j)  
+              {
+                 tmp_array[k] = *it_j;
+                 k++;
+                 j++;
+                 it_j++;
+              }
+            for (i = 0,it_i = range_start; i<n; i++,it_i++) 
+              {
+                 *it_i = tmp_array[i];
+              }
+         }
+    }
+    private:
+    iterator sub_merge_sort_noncopy(iterator range_start,int n) {
+       iterator it;
+       if (n==1)  
+         {
+            return range_start;
+         }
+       else if (n==2)  
+         {
+            iterator range_end=range_start+1;
+            if (*range_end<*range_start)  
+              {
+                 if (range_start.node==headp)  
+                   {
+                      range_start.node->next = range_end.node->next;
+                      range_end.node->prev = range_end.node;
+                      range_start.node->prev = range_end.node;
+                      range_end.node->next = range_start.node;
+                      headp = range_end.node;
+                   }
+                 else  
+                   {
+                      range_start.node->next = range_end.node->next;
+                      range_end.node->prev = range_start.node->prev;
+                      range_start.node->prev = range_end.node;
+                      range_end.node->next = range_start.node;
+                   }
+                 return range_end;
+              }
+            else  
+              {
+                 return range_start;
+              }
+         }
+       else  
+         {
+            iterator it_i=range_start;
+            iterator it_j=range_start+n/2;
+            int i=0;int j=0;int k=0;
+            int while_i=n/2;
+            int while_j=n-n/2;
+            it_i = sub_merge_sort_noncopy(it_i,while_i);
+            it_j = sub_merge_sort_noncopy(it_j,while_j);
+            iterator new_begin;
+            iterator mark;
+            new_begin.node = new list_node<T> ();
+            mark.node = new_begin.node;
+            T tmp_array[n];
+            while (i<while_i&&j<while_j)  
+              {
+                 if (*it_i<*it_j)  
+                   {
+                      mark.node->next = tmp_array[k] = *it_i;
+                      it_i++;
+                      i++;
+                   }
+                 else  
+                   {
+                      tmp_array[k] = *it_j;
+                      it_j++;
+                      j++;
+                   }
+                 k++;
+              }
+            while (i<while_i)  
+              {
+                 tmp_array[k] = *it_i;
+                 k++;
+                 i++;
+                 it_i++;
+              }
+            while (j<while_j)  
+              {
+                 tmp_array[k] = *it_j;
+                 k++;
+                 j++;
+                 it_j++;
+              }
+            for (i = 0,it_i = range_start; i<n; i++,it_i++) 
+              {
+                 *it_i = tmp_array[i];
+              }
+         }
+    }
+  };

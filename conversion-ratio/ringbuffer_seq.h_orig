@@ -1,0 +1,32 @@
+  std::string toString() {
+    return "Capacity: " + std::to_string(capacity_) + "\n" + "Index: " +
+           std::to_string(tail - head);
+  };
+  unsigned size() { return tail - head; }
+
+template <typename T>
+bool RingBuffer<T>::push(T item) {
+  if (tail - head >= capacity_) {
+    return false;
+  }
+  int index = tail++;
+  data[index % capacity_] = item;
+  return true;
+}
+template <class T>
+bool RingBuffer<T>::pop(T& result) {
+  if (tail <= head) {
+    return false;
+  }
+  result = data[head % capacity_];
+  head++;
+  return true;
+}
+template <class T>
+bool RingBuffer<T>::isFull() {
+  return (tail - head >= capacity_);
+}
+template <class T>
+bool RingBuffer<T>::isEmpty() {
+  return (tail <= head);
+}

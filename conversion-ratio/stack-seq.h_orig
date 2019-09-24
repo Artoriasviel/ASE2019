@@ -1,0 +1,41 @@
+  std::string toString() {
+    return "Capacity: " + std::to_string(capacity_) + "\n" + "Index: " +
+           std::to_string(idx_);
+  };
+  unsigned size() { return idx_; }
+template <typename T>
+bool Stack<T>::push(T t) {
+  if (idx_ < capacity_) {
+    array_[idx_++] = t;
+    return true;
+  } else {
+    return false;
+  }
+}
+template <typename T>
+bool Stack<T>::pop(T &t) {
+  if (idx_ > 0) {
+    t = array_[idx_ - 1];
+    idx_--;
+    return true;
+  } else {
+    return false;
+  }
+}
+template <typename T>
+bool Stack<T>::peek(T &t) {
+  if (idx_ > 0) {
+    t = array_[idx_ - 1];
+    return true;
+  } else {
+    return false;
+  }
+}
+template <typename T>
+bool Stack<T>::isFull() {
+  return idx_ > capacity_;
+}
+template <typename T>
+bool Stack<T>::isEmpty() {
+  return idx_ <= 0;
+}

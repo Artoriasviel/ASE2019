@@ -1,0 +1,70 @@
+  std::string toString() {
+    return "Elements: " + std::to_string(idx_);
+  };
+template <typename T>
+void BST<T>::insert(T newItem) {
+  if (contains(newItem)) {
+    return;
+  }
+  Node<T> *newNode = new Node<T>(newItem);
+
+  if (root == nullptr) {
+    root = newNode;
+    return;
+  }
+  Node<T> *newNodeParent = nullptr;
+  Node<T> *current = root;
+  while (current != nullptr) {
+    newNodeParent = current;
+    if (newNode->value < current->value)
+      current = current->left;
+    else
+      current = current->right;
+  }
+  newNode->parent = newNodeParent;
+
+  if (newNode->value < newNodeParent->value)
+    newNodeParent->left = newNode;
+  else
+    newNodeParent->right = newNode;
+  idx_++;
+}
+template <typename T>
+void BST<T>::remove(T &t) {
+  if (isEmpty()) return;
+
+  Node<T> *nodeToRemove = root;
+  while (nodeToRemove != nullptr) {
+    if (t == nodeToRemove->value) break;
+    else if (t < nodeToRemove->value)
+      nodeToRemove = nodeToRemove->left;
+    else
+      nodeToRemove = nodeToRemove->right;
+  }
+  if (nodeToRemove == nullptr) return;
+  if (nodeToRemove->left == nullptr)
+    transplant(nodeToRemove, nodeToRemove->right);
+  else if (nodeToRemove->right == nullptr)
+    transplant(nodeToRemove, nodeToRemove->left);
+  else {
+    Node<T> *successor = findMin();
+    if (successor->parent != nodeToRemove) {
+      transplant(successor, successor->right);
+      successor->right = nodeToRemove->right;
+      successor->right->parent = successor;
+    }
+    transplant(nodeToRemove, successor);
+    successor->left = nodeToRemove->left;
+    successor->left->parent = successor;
+  }
+  idx_--;
+}
+template <typename T>
+bool BST<T>::contains(T &v) {
+  if (search(root, v) != nullptr) return true;
+  return false;
+}
+template <typename T>
+bool BST<T>::isEmpty() {
+  return idx_ <= 0;
+}

@@ -1,0 +1,777 @@
+#include "TATAS.h"
+#include <vector>
+
+#include <stdio.h>
+#include <iostream>
+template <class T>
+class list_seq  
+  ;
+template <class T>
+class list_node  
+  {
+    private:
+    T value;
+    list_node<T>* prev;
+    list_node<T>* next;
+    friend class list_seq<T>;
+  };
+template <class T>
+class new_iterator  
+  {
+    struct new_iterator_synobj{
+      list_node<T>* node;
+      struct ModifyLog 
+      {
+        list_node<T>** m_node;
+        list_node<T>* m_node_new;
+        list_node<T>* m_node_old;
+      };
+      std::atomic<std::vector<struct ModifyLog> *> modlog;
+      
+      new_iterator_synobj() : modlog(0) { }
+      void insert_mod(list_node<T>** m_node, list_node<T>* m_node_old, list_node<T>* m_node_new) 
+      {
+        struct ModifyLog tmp;
+        tmp.m_node = m_node; 
+        tmp.m_node_new = m_node_new; 
+        tmp.m_node_old = m_node_old;
+        std::vector<struct ModifyLog> * cur = modlog.load();
+        if (cur == 0) {
+           cur = new std::vector<struct ModifyLog>;
+           modlog = cur;
+        }
+        cur->push_back(tmp);
+      }
+      void apply_mod() 
+      {
+        std::vector<struct ModifyLog> * cur = modlog.load();
+        if (cur == 0) return;
+        for (typename std::vector<struct ModifyLog>::iterator p = cur->begin();
+             p != cur->end(); p++) {
+          struct ModifyLog& tmp = (*p);
+          std::atomic<list_node<T>*> * tmp_atomic = reinterpret_cast<std::atomic<list_node<T>*> *>(tmp.m_node);
+          std::atomic_compare_exchange_weak(tmp_atomic, &tmp.m_node_old, tmp.m_node_new);
+        }
+        modlog.compare_exchange_weak(cur, 0);
+        
+      }
+      new_iterator_synobj& operator =(new_iterator_synobj& that)
+      {
+        that.apply_mod();
+        node=that.node;
+        modlog=0;
+        return *this;
+      }
+    };
+    std::atomic <struct new_iterator_synobj*> state;
+    public:
+    ;
+    public:
+    new_iterator ()  {
+       struct new_iterator_synobj* state_tmp=new new_iterator_synobj ();
+       state_tmp->node = NULL;
+       state = state_tmp;
+    }
+    public:
+    new_iterator (const new_iterator& mid)  {
+       struct new_iterator_synobj* state_tmp=new new_iterator_synobj ();
+       state_tmp->node = mid.state_tmp->node;
+       state = state_tmp;
+    }
+    bool operator !=(new_iterator mid) {
+       struct new_iterator_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->node!=mid.__res->node;
+    }
+    bool operator ==(new_iterator mid) {
+       struct new_iterator_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->node==mid.__res->node;
+    }
+    new_iterator& operator ++(int) {
+       struct new_iterator_synobj* oldstate;
+       struct new_iterator_synobj* newstate;
+       state.load()->apply_mod();
+       newstate = new struct new_iterator_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         newstate->node = newstate->node->next;
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+       return *this;
+    }
+    new_iterator operator +(int n) {
+       struct new_iterator_synobj* oldstate;
+       struct new_iterator_synobj* newstate;
+       state.load()->apply_mod();
+       new_iterator it;
+       newstate = new struct new_iterator_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         it.newstate->node = newstate->node;
+         while (n>0)  
+           {
+              it.newstate->node = it.newstate->node->next;
+              n--;
+           }
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+       return it;
+    }
+    new_iterator& operator --(int) {
+       struct new_iterator_synobj* oldstate;
+       struct new_iterator_synobj* newstate;
+       state.load()->apply_mod();
+       newstate = new struct new_iterator_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         newstate->node = newstate->node->prev;
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+       return *this;
+    }
+    T& operator *() {
+       struct new_iterator_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->node->value;
+    }
+  };
+template <class T>
+class list_seq  
+  {
+    struct list_seq_synobj{
+      std::size_t counter;list_node<T>* tailp;list_node<T>* headp;
+      struct ModifyLog 
+      {
+        list_node<T>** m_headp;
+        list_node<T>* m_headp_new;
+        list_node<T>* m_headp_old;
+      };
+      std::atomic<std::vector<struct ModifyLog> *> modlog;
+      
+      list_seq_synobj() : modlog(0) { }
+      void insert_mod(list_node<T>** m_headp, list_node<T>* m_headp_old, list_node<T>* m_headp_new) 
+      {
+        struct ModifyLog tmp;
+        tmp.m_headp = m_headp; 
+        tmp.m_headp_new = m_headp_new; 
+        tmp.m_headp_old = m_headp_old;
+        std::vector<struct ModifyLog> * cur = modlog.load();
+        if (cur == 0) {
+           cur = new std::vector<struct ModifyLog>;
+           modlog = cur;
+        }
+        cur->push_back(tmp);
+      }
+      void apply_mod() 
+      {
+        std::vector<struct ModifyLog> * cur = modlog.load();
+        if (cur == 0) return;
+        for (typename std::vector<struct ModifyLog>::iterator p = cur->begin();
+             p != cur->end(); p++) {
+          struct ModifyLog& tmp = (*p);
+          std::atomic<list_node<T>*> * tmp_atomic = reinterpret_cast<std::atomic<list_node<T>*> *>(tmp.m_headp);
+          std::atomic_compare_exchange_weak(tmp_atomic, &tmp.m_headp_old, tmp.m_headp_new);
+        }
+        modlog.compare_exchange_weak(cur, 0);
+        
+      }
+      list_seq_synobj& operator =(list_seq_synobj& that)
+      {
+        that.apply_mod();
+        counter=that.counter;
+        tailp=that.tailp;
+        headp=that.headp;
+        modlog=0;
+        return *this;
+      }
+    };
+    std::atomic <struct list_seq_synobj*> state;
+    public:
+    ;
+    ;
+    list_node<T>* nil;
+    ;
+    typedef T value_type;
+    typedef T& reference;
+    typedef std::size_t size_type;
+    public:
+    list_seq ()  {
+       struct list_seq_synobj* state_tmp=new list_seq_synobj ();
+       nil = new list_node<T> ();
+       nil->prev = nil->next = nil;
+       state_tmp->headp = state_tmp->tailp = nil;
+       state_tmp->counter = 0;
+       state = state_tmp;
+    }
+    ~list_seq() {
+       struct list_seq_synobj* state_tmp=state;
+       list_node<T>* p=state_tmp->headp;list_node<T>* q;
+       while (p!=nil)  
+         {
+            q = p;
+            p = p->next;
+            delete q;
+         }
+       delete p;
+    }
+    typedef new_iterator<T> iterator;
+    iterator begin() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       iterator it;
+       __res=state.load();
+       it.node = __res->headp;
+       return it;
+    }
+    iterator end() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       iterator it;
+       __res=state.load();
+       it.node = nil;
+       return it;
+    }
+    std::size_t size() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->counter;
+    }
+    bool empty() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->counter<1;
+    }
+    reference operator [](std::size_t n) {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       int i;
+       list_node<T>* p;
+       for (i = 0,p = state->headp; i<n&&p!=nil; i++,p = p->next) 
+         {
+            
+         }
+       __res=state.load();
+       return p->value;
+    }
+    reference front() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->headp->value;
+    }
+    reference back() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return __res->tailp->value;
+    }
+    void push_front(T x) {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       state.load()->apply_mod();
+       list_node<T>* new_node=new list_node<T> ();
+       new_node->value = x;
+       new_node->prev = new_node;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         list_node<T>* newstate_headp_prev_copy=0;
+         new_node->next = newstate->headp;
+         newstate_headp_prev_copy = new_node;
+         newstate->insert_mod(&(newstate->headp->prev),newstate->headp->prev,newstate_headp_prev_copy);
+         newstate->headp = new_node;
+         if (newstate->counter==0)  
+           {
+              newstate->tailp = new_node;
+           }
+         newstate->counter++;
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+    }
+    void push_back(T x) {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       state.load()->apply_mod();
+       list_node<T>* new_node=new list_node<T> ();
+       new_node->value = x;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         list_node<T>* nil_prev_copy=0;
+         list_node<T>* newstate_tailp_next_copy=0;
+         if (newstate->counter==0)  
+           {
+              newstate->headp = newstate->tailp = new_node;
+              new_node->prev = new_node;
+              new_node->next = nil;
+              nil_prev_copy = new_node;
+              newstate->insert_mod(&(nil->prev),nil->prev,nil_prev_copy);
+           }
+         else  
+           {
+              new_node->next = nil;
+              new_node->prev = newstate->tailp;
+              nil_prev_copy = new_node;
+              newstate->insert_mod(&(nil->prev),nil->prev,nil_prev_copy);
+              newstate_tailp_next_copy = new_node;
+              newstate->insert_mod(&(newstate->tailp->next),newstate->tailp->next,newstate_tailp_next_copy);
+              newstate->tailp = new_node;
+           }
+         newstate->counter++;
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+    }
+    T pop_front() {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       state.load()->apply_mod();
+       T res;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         list_node<T>* newstate_headp_prev_copy=0;
+         list_node<T>* nil_prev_copy=0;
+         return res;
+         if (newstate->counter>1)  
+           {
+              res = newstate->headp->value;
+              list_node<T>* tmp_headp=newstate->headp;
+              newstate->headp = newstate->headp->next;
+              newstate_headp_prev_copy = newstate->headp;
+              newstate->insert_mod(&(newstate->headp->prev),newstate->headp->prev,newstate_headp_prev_copy);
+              
+              newstate->counter--;
+           }
+         else if (newstate->counter==1)  
+           {
+              list_node<T>* tmp_headp=newstate->headp;
+              newstate->headp = newstate->tailp = nil;
+              nil_prev_copy = nil;
+              newstate->insert_mod(&(nil->prev),nil->prev,nil_prev_copy);
+              res = tmp_headp->value;
+              
+              newstate->counter--;
+           }
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+    }
+    T pop_back() {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       state.load()->apply_mod();
+       T res;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         list_node<T>* newstate_tailp_next_copy=0;
+         list_node<T>* nil_prev_copy=0;
+         return res;
+         if (newstate->counter>1)  
+           {
+              res = newstate->tailp->value;
+              list_node<T>* tmp_tailp=newstate->tailp;
+              newstate->tailp = newstate->tailp->prev;
+              newstate_tailp_next_copy = nil;
+              newstate->insert_mod(&(newstate->tailp->next),newstate->tailp->next,newstate_tailp_next_copy);
+              nil_prev_copy = newstate->tailp;
+              newstate->insert_mod(&(nil->prev),nil->prev,nil_prev_copy);
+              
+              newstate->counter--;
+           }
+         else if (newstate->counter==1)  
+           {
+              res = newstate->tailp->value;
+              list_node<T>* tmp_tailp=newstate->tailp;
+              newstate->headp = newstate->tailp = nil;
+              nil_prev_copy = nil;
+              newstate->insert_mod(&(nil->prev),nil->prev,nil_prev_copy);
+              
+              newstate->counter--;
+           }
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+    }
+    iterator insert(iterator pos,T x) {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       state.load()->apply_mod();
+       list_node<T>* new_node=new list_node<T> ();
+       new_node->value = x;
+       iterator it;
+       it.node = new_node;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         list_node<T>* newstate_headp_prev_copy=0;
+         list_node<T>* pos_node_prev_copy=0;
+         if (pos.node==newstate->headp)  
+           {
+              new_node->next = newstate->headp;
+              new_node->prev = new_node;
+              newstate_headp_prev_copy = new_node;
+              newstate->insert_mod(&(newstate->headp->prev),newstate->headp->prev,newstate_headp_prev_copy);
+              newstate->headp = new_node;
+              if (newstate->counter==0)  
+                {
+                   newstate->tailp = new_node;
+                }
+           }
+         else  
+           {
+              if (pos.node->prev != 0) pos_node_prev_copy = new list_node<T>(*pos.node->prev);
+              else pos_node_prev_copy = 0;
+              pos.node->prev = pos_node_prev_copy;
+              list_node<T>* new_prev=pos_node_prev_copy;
+              new_node->prev = new_prev;
+              new_node->next = pos.node;
+              new_prev->next = new_node;
+              pos.node->prev = new_node;
+              if (pos.node==nil)  
+                {
+                   newstate->tailp = new_node;
+                }
+           }
+         newstate->counter++;
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+       return it;
+    }
+    iterator erase(iterator pos) {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       new_iterator<T> __ret__23;
+       state.load()->apply_mod();
+       list_node<T>* curr=pos.node;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         list_node<T>* newstate_headp_prev_copy=0;
+         if (curr==newstate->headp)  
+           {
+              newstate->headp = newstate->headp->next;
+              newstate_headp_prev_copy = newstate->headp;
+              newstate->insert_mod(&(newstate->headp->prev),newstate->headp->prev,newstate_headp_prev_copy);
+              if (newstate->counter==1)  
+                {
+                   newstate->tailp = newstate->headp;
+                }
+              newstate->counter--;
+              
+              iterator it;
+              it.node = newstate->headp;
+              __ret__23 = it;
+           }
+         else  
+           {
+              list_node<T>* tmp_prev=curr->prev;
+              list_node<T>* tmp_next=curr->next;
+              tmp_next->prev = tmp_prev;
+              tmp_prev->next = tmp_next;
+              if (curr==newstate->tailp)  
+                {
+                   newstate->tailp = tmp_prev;
+                }
+              
+              newstate->counter--;
+              iterator it;
+              it.node = tmp_next;
+              __ret__23 = it;
+           }
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+       return __ret__23;
+    }
+    iterator find(T t) {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       iterator it;
+       iterator _b4_it;
+       new_iterator<T> __ret__8;
+       iterator _b3_it;
+       __ret__8 = _b3_it;
+       while (_b3_it!=__ret__8)  
+         {
+            if (*_b3_it==t)  
+              {
+                 break;
+              }
+            else  
+              {
+                 _b3_it++;
+              }
+         }
+       __res=state.load();
+       _b4_it.node = __res->headp;
+       _b3_it.node = nil;
+       return it;
+    }
+    void bubble_sort() {
+       struct list_seq_synobj* oldstate;
+       struct list_seq_synobj* newstate;
+       state.load()->apply_mod();
+       iterator mark;
+       iterator min_mark;
+       iterator start;
+       iterator _b9_it;
+       start = _b9_it;
+       T tmp;
+       new_iterator<T> __ret__10;
+       iterator _b6_it;
+       __ret__10 = _b6_it;
+       newstate = new struct list_seq_synobj();
+       while (true) 
+       {
+         oldstate=state.load();
+         *newstate = *oldstate;
+         _b9_it.node = newstate->headp;
+         _b6_it.node = nil;
+         while (start!=__ret__10)  
+           {
+              min_mark = start;
+              mark = start;
+              mark++;
+              {
+                 new_iterator<T> __ret__9;
+                 iterator _b6_it;
+                 _b6_it.node = nil;
+                 __ret__9 = _b6_it;
+                 while (mark!=__ret__9)  
+                   {
+                      if (*mark<*min_mark)  
+                        {
+                           min_mark = mark;
+                        }
+                      mark++;
+                   }
+              }
+              if (min_mark!=start)  
+                {
+                   tmp = *min_mark;
+                   *min_mark = *start;
+                   *start = tmp;
+                }
+              start++;
+           }
+         if (state.compare_exchange_strong(oldstate,newstate)) 
+         {
+          state.load()->apply_mod();
+          break;
+         }
+       }
+    }
+    void merge_sort() {
+       struct list_seq_synobj* __res;
+       state.load()->apply_mod();
+       iterator _b10_it;
+       __res=state.load();
+       _b10_it.node = __res->headp;
+    }
+    private:
+    void sub_merge_sort_copy(iterator range_start,int n) {
+       T tmp;
+       if (n==1)  
+         {
+            return ;
+         }
+       else if (n==2)  
+         {
+            iterator range_end=range_start+1;
+            if (*range_end<*range_start)  
+              {
+                 tmp = *range_start;
+                 *range_start = *range_end;
+                 *range_end = tmp;
+              }
+         }
+       else  
+         {
+            iterator it_i=range_start;
+            iterator it_j=range_start+n/2;
+            int i=0;int j=0;int k=0;
+            int while_i=n/2;
+            int while_j=n-n/2;
+            sub_merge_sort_copy(it_i,while_i);
+            sub_merge_sort_copy(it_j,while_j);
+            T tmp_array[n];
+            while (i<while_i&&j<while_j)  
+              {
+                 if (*it_i<*it_j)  
+                   {
+                      tmp_array[k] = *it_i;
+                      it_i++;
+                      i++;
+                   }
+                 else  
+                   {
+                      tmp_array[k] = *it_j;
+                      it_j++;
+                      j++;
+                   }
+                 k++;
+              }
+            while (i<while_i)  
+              {
+                 tmp_array[k] = *it_i;
+                 k++;
+                 i++;
+                 it_i++;
+              }
+            while (j<while_j)  
+              {
+                 tmp_array[k] = *it_j;
+                 k++;
+                 j++;
+                 it_j++;
+              }
+            for (i = 0,it_i = range_start; i<n; i++,it_i++) 
+              {
+                 *it_i = tmp_array[i];
+              }
+         }
+    }
+    private:
+    iterator sub_merge_sort_noncopy(iterator range_start,int n) {
+       struct list_seq_synobj* state_tmp=state;
+       iterator it;
+       if (n==1)  
+         {
+            return range_start;
+         }
+       else if (n==2)  
+         {
+            iterator range_end=range_start+1;
+            if (*range_end<*range_start)  
+              {
+                 if (range_start.node==state_tmp->headp)  
+                   {
+                      range_start.node->next = range_end.node->next;
+                      range_end.node->prev = range_end.node;
+                      range_start.node->prev = range_end.node;
+                      range_end.node->next = range_start.node;
+                      state_tmp->headp = range_end.node;
+                   }
+                 else  
+                   {
+                      range_start.node->next = range_end.node->next;
+                      range_end.node->prev = range_start.node->prev;
+                      range_start.node->prev = range_end.node;
+                      range_end.node->next = range_start.node;
+                   }
+                 return range_end;
+              }
+            else  
+              {
+                 return range_start;
+              }
+         }
+       else  
+         {
+            iterator it_i=range_start;
+            iterator it_j=range_start+n/2;
+            int i=0;int j=0;int k=0;
+            int while_i=n/2;
+            int while_j=n-n/2;
+            it_i = sub_merge_sort_noncopy(it_i,while_i);
+            it_j = sub_merge_sort_noncopy(it_j,while_j);
+            iterator new_begin;
+            iterator mark;
+            new_begin.node = new list_node<T> ();
+            mark.node = new_begin.node;
+            T tmp_array[n];
+            while (i<while_i&&j<while_j)  
+              {
+                 if (*it_i<*it_j)  
+                   {
+                      mark.node->next = tmp_array[k] = *it_i;
+                      it_i++;
+                      i++;
+                   }
+                 else  
+                   {
+                      tmp_array[k] = *it_j;
+                      it_j++;
+                      j++;
+                   }
+                 k++;
+              }
+            while (i<while_i)  
+              {
+                 tmp_array[k] = *it_i;
+                 k++;
+                 i++;
+                 it_i++;
+              }
+            while (j<while_j)  
+              {
+                 tmp_array[k] = *it_j;
+                 k++;
+                 j++;
+                 it_j++;
+              }
+            for (i = 0,it_i = range_start; i<n; i++,it_i++) 
+              {
+                 *it_i = tmp_array[i];
+              }
+         }
+    }
+  };

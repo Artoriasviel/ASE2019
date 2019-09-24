@@ -1,0 +1,206 @@
+<svg width="578" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 578 476" xmlns:xlink="http://www.w3.org/1999/xlink" height="476">
+    <style type="text/css"><![CDATA[
+.st1 {fill:#303030;font-family:Arial;font-size:11pt}
+]]></style>
+    <defs>
+        <linearGradient x1="0%" y1="0%" y2="100%" x2="0%" id="lg1">
+            <stop stop-color="#fbfafb" offset="0"/>
+            <stop stop-color="#edeaf0" offset="1"/>
+        </linearGradient>
+    </defs>
+    <g transform="translate(-297.26,-800)">
+        <g transform="translate(312.3,897.7)">
+            <path fill="url(#lg1)" d="M160.5,45L321,22.5L160.5,0L0,22.5L160.5,45z" stroke="#5c4776" id="shape1"/>
+            <text class="st1">
+                <tspan y="27" x="76.5">Interface function analysis</tspan>
+            </text>
+        </g>
+        <g transform="translate(312.3,831.7)">
+            <path fill="url(#lg1)" d="M160.5,45L321,22.5L160.5,0L0,22.5L160.5,45z" stroke="#5c4776" id="shape2"/>
+            <text class="st1">
+                <tspan y="27" x="72.5">Identify data to synchronize</tspan>
+            </text>
+        </g>
+        <g transform="translate(312.3,963.7)">
+            <path fill="url(#lg1)" d="M160.5,45L321,22.5L160.5,0L0,22.5L160.5,45z" stroke="#5c4776" id="shape3"/>
+            <text class="st1">
+                <tspan y="27" x="72.5">Normalization of input code</tspan>
+            </text>
+        </g>
+        <g transform="translate(312.3,1029.7)">
+            <path fill="url(#lg1)" d="M160.5,45L321,22.5L160.5,0L0,22.5L160.5,45z" stroke="#5c4776" id="shape4"/>
+            <text class="st1">
+                <tspan y="27" x="70.5">Object connectivity analysis</tspan>
+            </text>
+        </g>
+        <g transform="translate(312.3,1093.7)">
+            <path fill="url(#lg1)" d="M160.5,45L321,22.5L160.5,0L0,22.5L160.5,45z" stroke="#5c4776" id="shape5"/>
+            <text class="st1">
+                <tspan y="27" x="70.5">Reaching definition analysis</tspan>
+            </text>
+        </g>
+        <g transform="translate(370.28,1160.7)">
+            <path fill="url(#lg1)" d="M205,28L205,0L0,0L0,28L205,28z" stroke="#5c4776" id="shape6"/>
+            <text class="st1">
+                <tspan y="18.5" x="28">Relocating shared data</tspan>
+            </text>
+        </g>
+        <g transform="translate(382.26,810.7)" id="shape7">
+            <text class="st1">
+                <tspan y="14" x="11">Input code</tspan>
+            </text>
+        </g>
+        <g transform="translate(382.26,877.7)" id="shape8">
+            <text class="st1">
+                <tspan y="14" x="11">Input code</tspan>
+            </text>
+        </g>
+        <g transform="matrix(0,1,-1,0,472.8,876.7)" id="shape9">
+            <path fill="none" d="M0,0L13,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M13,-4L21,0L13,4L13,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="matrix(0,1,-1,0,472.8,811.7)" id="shape10">
+            <path fill="none" d="M0,0L12,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M12,-4L20,0L12,4L12,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="matrix(0,1,-1,0,472.8,942.7)" id="shape11">
+            <path fill="none" d="M0,0L13,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M13,-4L21,0L13,4L13,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="matrix(0,1,-1,0,472.8,1008.7)" id="shape12">
+            <path fill="none" d="M0,0L13,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M13,-4L21,0L13,4L13,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="matrix(0,1,-1,0,472.8,1074.7)" id="shape13">
+            <path fill="none" d="M0,0L11,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M11,-4L19,0L11,4L11,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="matrix(0,1,-1,0,472.8,1138.7)" id="shape14">
+            <path fill="none" d="M0,0L14,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M14,-4L22,0L14,4L14,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(303.26,1009.7)" id="shape15">
+            <text class="st1">
+                <tspan y="14" x="12">Normalized input code</tspan>
+            </text>
+        </g>
+        <g transform="translate(303.26,1074.7)" id="shape16">
+            <text class="st1">
+                <tspan y="14" x="12">Normalized input code</tspan>
+            </text>
+        </g>
+        <g transform="translate(303.26,1137.7)" id="shape17">
+            <text class="st1">
+                <tspan y="14" x="12">Normalized input code</tspan>
+            </text>
+        </g>
+        <g transform="translate(382.26,943.7)" id="shape18">
+            <text class="st1">
+                <tspan y="14" x="11">Input code</tspan>
+            </text>
+        </g>
+        <g transform="translate(370.28,1215.7)">
+            <path fill="url(#lg1)" d="M206,28L206,0L0,0L0,28L206,28z" stroke="#5c4776" id="shape19"/>
+            <text class="st1">
+                <tspan y="18.5" x="19">Inserting synchronizations</tspan>
+            </text>
+        </g>
+        <g transform="translate(489.26,877.7)" id="shape20">
+            <text class="st1">
+                <tspan y="14" x="9">+variables&amp;objects to synchronize</tspan>
+            </text>
+        </g>
+        <g transform="translate(489.26,943.7)" id="shape21">
+            <text class="st1">
+                <tspan y="14" x="7">+interface functions to synchronize</tspan>
+            </text>
+        </g>
+        <g transform="translate(489.26,1009.7)" id="shape22">
+            <text class="st1">
+                <tspan y="14" x="5">+independent functions to synchronize</tspan>
+            </text>
+        </g>
+        <g transform="translate(489.26,1074.7)" id="shape23">
+            <text class="st1">
+                <tspan y="14" x="10">+shared objects to relocate vs modify in place</tspan>
+            </text>
+        </g>
+        <g transform="translate(489.26,1137.7)" id="shape24">
+            <text class="st1">
+                <tspan y="14" x="7">+def-use chains for references to shared objects</tspan>
+            </text>
+        </g>
+        <g transform="translate(489.26,1192.7)" id="shape25">
+            <text class="st1">
+                <tspan y="14" x="4">Modified data abstraction implementation</tspan>
+            </text>
+        </g>
+        <g transform="matrix(0,1,-1,0,473.3,1243.7)" id="shape26">
+            <path fill="none" d="M0,0L14,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M14,-4L22,0L14,4L14,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(489.26,1247.7)" id="shape27">
+            <text class="st1">
+                <tspan y="14" x="4">Concurrent data abstraction implementation</tspan>
+            </text>
+        </g>
+        <g transform="matrix(0,-1,1,0,819.3,1247.7)" id="shape28">
+            <path fill="none" d="M0,0L408,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M408,-4L416,0L408,4L408,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(633.26,854.2)" id="shape29">
+            <path fill="none" d="M0,0L177,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M177,-4L185,0L177,4L177,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(633.26,920.2)" id="shape30">
+            <path fill="none" d="M0,0L177,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M177,-4L185,0L177,4L177,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(633.26,986.2)" id="shape31">
+            <path fill="none" d="M0,0L177,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M177,-4L185,0L177,4L177,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(633.26,1052.2)" id="shape32">
+            <path fill="none" d="M0,0L178,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M178,-4L186,0L178,4L178,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(633.26,1116.2)" id="shape33">
+            <path fill="none" d="M0,0L177,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M177,-4L185,0L177,4L177,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(640.26,831.7)" id="shape34">
+            <text class="st1">
+                <tspan y="14" x="36">fail</tspan>
+            </text>
+        </g>
+        <g transform="translate(640.26,897.7)" id="shape35">
+            <text class="st1">
+                <tspan y="14" x="36">fail</tspan>
+            </text>
+        </g>
+        <g transform="translate(640.26,963.7)" id="shape36">
+            <text class="st1">
+                <tspan y="14" x="36">fail</tspan>
+            </text>
+        </g>
+        <g transform="translate(640.26,1029.7)" id="shape37">
+            <text class="st1">
+                <tspan y="14" x="36">fail</tspan>
+            </text>
+        </g>
+        <g transform="translate(640.26,1093.7)" id="shape38">
+            <text class="st1">
+                <tspan y="14" x="36">fail</tspan>
+            </text>
+        </g>
+        <g transform="translate(758.26,810.7)" id="shape39">
+            <text class="st1">
+                <tspan y="14" x="10">Fail to convert</tspan>
+            </text>
+        </g>
+        <g transform="matrix(0.02,1,-1,0.02,472.8,1188.7)" id="shape40">
+            <path fill="none" d="M0,0L19,0" stroke="#5c4776"/>
+            <path stroke-width="1" fill="#5c4776" d="M19,-4L27,0L19,4L19,-4" stroke="#5c4776" stroke-linecap="round"/>
+        </g>
+    </g>
+</svg>

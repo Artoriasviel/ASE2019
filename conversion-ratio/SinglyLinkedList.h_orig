@@ -1,0 +1,67 @@
+    void Reverse()
+     {  if (count == 0)
+              return;
+        SinglyLinkedEntryWrap<T>* tmp = head, *tmp1 = tmp->next;
+        while (tmp != end) {
+          SinglyLinkedEntryWrap<T>* tmp2 = tmp;
+          tmp = tmp1;
+          tmp1 = tmp->next;
+          tmp->next = tmp2;
+        }
+        head->next = 0;
+        end = head;
+        head = tmp;
+     }
+    void AppendLast( const T& o )
+     {
+       ++count;
+       SinglyLinkedEntryWrap<T> *e = new SinglyLinkedEntryWrap<T>( o );
+       if (end == 0)
+          head = end = e;
+       else  {
+          end->next = e;
+          end = e;
+       }
+     }
+     void PushFirst( const T& o )
+     {
+       ++count;
+       SinglyLinkedEntryWrap<T> *e = new SinglyLinkedEntryWrap<T>( o );
+       if (head == 0)
+          head = end = e;
+       else {
+          e->next = head;
+          head = e;
+       }
+     }
+     void PopFirst()
+     {
+        if (count > 0) {
+          --count;
+          SinglyLinkedEntryWrap<T>* e = head;
+          if (head == end)
+             head = end = 0;
+          else
+             head = head->next;
+          delete e;
+        }
+     }
+    void DeleteAll()
+    {
+       while (head != 0)
+           PopFirst();
+    }
+    unsigned size() const { return count; }
+----------------------------
+    void operator += (const SinglyLinkedListWrap<T> & that)
+    {
+      for (Iterator iter(that); !iter.ReachEnd(); iter++) {
+         T &c = iter.Current();
+         AppendLast(c);
+      }
+    }
+    SinglyLinkedEntryWrap<T>* First() const { return head; }
+    SinglyLinkedEntryWrap<T>* Last() const { return end; }
+    SinglyLinkedEntryWrap<T>* Next(SinglyLinkedEntryWrap<T>* cur) const
+          { return cur->next; }
+   Iterator GetIterator() const { return Iterator(*this); }

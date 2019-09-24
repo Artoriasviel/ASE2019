@@ -1,0 +1,83 @@
+    void Insert(uint32_t key);
+    bool Delete(uint32_t key);
+    bool Find(uint32_t key);
+void MDList::Insert(uint32_t key)
+{
+    //Allocate new node
+    //Decompose Key into mutli-dimension coordinates
+    Node* new_node = new Node;
+    new_node->m_key = key;
+    KeyToCoord<DIMENSION>(key, new_node->m_coord);
+
+    Node* pred = NULL;      //pred node
+    Node* curr = m_head;    //curr node
+    uint32_t dim = 0;       //the dimension of curr node
+    uint32_t pred_dim = 0;  //the dimesnion of pred node
+
+    LocatePred(new_node->m_coord, pred, curr, dim, pred_dim);
+
+    //We are not updating existing node, remove this line to allow update
+    if(dim == DIMENSION)
+    {
+        return;
+    }
+
+    FillNewNode(new_node, pred, curr, dim, pred_dim);
+    pred->m_child[pred_dim] = new_node;
+    FinishInserting(new_node, curr, dim, pred_dim);
+}
+bool MDList::Delete(uint32_t key)
+{
+    uint8_t coord[DIMENSION];
+    KeyToCoord<DIMENSION>(key, coord);
+    Node* pred = NULL;      //pred node
+    Node* curr = m_head;    //curr node
+    uint32_t dim = 0;       //the dimension of curr node
+    uint32_t pred_dim = 0;  //the dimesnion of pred node
+
+    LocatePred(coord, pred, curr, dim, pred_dim);
+
+    Node* nextChild = NULL;
+    uint32_t child_dim = 0;
+
+    if(dim == DIMENSION)
+    {
+        for(int i = DIMENSION - 1; i >= 0; i--)
+        {
+            if(curr->m_child[i] != NULL)
+            {
+                nextChild = curr->m_child[i];
+                child_dim = i;
+                break;
+            }
+        }
+
+        pred->m_child[pred_dim] = nextChild;
+        if(nextChild != NULL)
+        {
+            for(uint32_t i = pred_dim; i < child_dim; i++)
+            {
+                nextChild->m_child[i] = curr->m_child[i];
+            }
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+bool MDList::Find(uint32_t key)
+{
+    uint8_t coord[DIMENSION];
+    KeyToCoord<DIMENSION>(key, coord);
+    Node* pred = NULL;      //pred node
+    Node* curr = m_head;    //curr node
+    uint32_t dim = 0;       //the dimension of curr node
+    uint32_t pred_dim = 0;  //the dimesnion of pred node
+
+    LocatePred(coord, pred, curr, dim, pred_dim);
+
+    return dim == DIMENSION;
+}

@@ -1,0 +1,155 @@
+#include "TATAS.h"
+#include <vector>
+#include <queue>
+#include <cstring>
+
+#include <string>
+template <typename T>
+class Stack  
+  {
+    mutable TATAS lockarray_;
+    mutable TATAS lockidx_;
+    public:
+    public:
+    Stack (int capacity) : capacity_(capacity),idx_(0) {
+       array_ = new T [capacity_];
+       for (int i=0; i<capacity_; i+=1)
+         {
+            array_[i] = 0;
+         }
+    }
+    ;
+    bool push(T t) ;
+    bool pop(T& t) ;
+    bool peek(T& t) ;
+    bool isFull() ;
+    bool isEmpty() ;
+    std::string toString() {
+       
+       while(true)
+       {
+        try {
+         {
+           AcquireLock acq_idx_(lockidx_);
+           return "Capacity: "+std::to_string(capacity_)+"\n"+"Index: "+std::to_string(idx_);
+         }
+         break;
+        } catch(...){}
+       }
+    }
+    unsigned size() {
+       
+       size_t __ret__15=0;
+       while(true)
+       {
+        try {
+         {
+           AcquireLock acq_idx_(lockidx_);
+           __ret__15 = idx_;
+         }
+         break;
+        } catch(...){}
+       }
+       return __ret__15;
+    }
+    private:
+    const size_t capacity_;
+    size_t idx_;
+    T* array_;
+  };
+template <typename T>
+bool Stack<T>::push(T t) {
+   
+   int __ret__1=-1;
+   {
+     AcquireLock acq_array_(lockarray_);
+     AcquireLock acq_idx_(lockidx_);
+     if (idx_<capacity_)
+       {
+          array_[idx_++] = t;
+          __ret__1 = true;
+       }
+     else 
+       {
+          __ret__1 = false;
+       }
+   }
+   return __ret__1;
+}
+template <typename T>
+bool Stack<T>::pop(T& t) {
+   
+   int __ret__2=-1;
+   {
+     AcquireLock acq_array_(lockarray_);
+     AcquireLock acq_idx_(lockidx_);
+     if (idx_>0)
+       {
+          t = array_[idx_-1];
+          idx_--;
+          __ret__2 = true;
+       }
+     else 
+       {
+          __ret__2 = false;
+       }
+   }
+   return __ret__2;
+}
+template <typename T>
+bool Stack<T>::peek(T& t) {
+   
+   int __ret__3=-1;
+   while(true)
+   {
+    try {
+     {
+       AcquireLock acq_array_(lockarray_);
+       AcquireLock acq_idx_(lockidx_);
+       if (idx_>0)
+         {
+            t = array_[idx_-1];
+            __ret__3 = true;
+         }
+       else 
+         {
+            __ret__3 = false;
+         }
+     }
+     break;
+    } catch(...){}
+   }
+   return __ret__3;
+}
+template <typename T>
+bool Stack<T>::isFull() {
+   
+   bool __ret__6=-1;
+   while(true)
+   {
+    try {
+     {
+       AcquireLock acq_idx_(lockidx_);
+       __ret__6 = idx_>capacity_;
+     }
+     break;
+    } catch(...){}
+   }
+   return __ret__6;
+}
+template <typename T>
+bool Stack<T>::isEmpty() {
+   
+   bool __ret__9=-1;
+   while(true)
+   {
+    try {
+     {
+       AcquireLock acq_idx_(lockidx_);
+       __ret__9 = idx_<=0;
+     }
+     break;
+    } catch(...){}
+   }
+   return __ret__9;
+}

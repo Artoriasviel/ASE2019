@@ -1,0 +1,455 @@
+#include "TATAS.h"
+#include <vector>
+
+template <typename T>
+class BST  
+  ;
+template <typename T>
+class Node  
+  {
+    public:
+    friend class BST<T>;
+    Node (T v)  {
+       value = v;
+       left = nullptr;
+       right = nullptr;
+       parent = nullptr;
+    }
+    private:
+    Node* left;
+    Node* right;
+    Node* parent;
+    T value;
+  };
+template <typename T>
+class BST  
+  {
+    struct BST_synobj{
+      Node<T>* root;size_t idx_;
+      struct ModifyLog 
+      {
+        Node<T>** m_root;
+        Node<T>* m_root_new;
+        Node<T>* m_root_old;
+      };
+      std::atomic<std::vector<struct ModifyLog> *> modlog;
+      
+      BST_synobj() : modlog(0) { }
+      void insert_mod(Node<T>** m_root, Node<T>* m_root_old, Node<T>* m_root_new) 
+      {
+        struct ModifyLog tmp;
+        tmp.m_root = m_root; 
+        tmp.m_root_new = m_root_new; 
+        tmp.m_root_old = m_root_old;
+        std::vector<struct ModifyLog> * cur = modlog.load();
+        if (cur == 0) {
+           cur = new std::vector<struct ModifyLog>;
+           modlog = cur;
+        }
+        cur->push_back(tmp);
+      }
+      void apply_mod() 
+      {
+        std::vector<struct ModifyLog> * cur = modlog.load();
+        if (cur == 0) return;
+        for (typename std::vector<struct ModifyLog>::iterator p = cur->begin();
+             p != cur->end(); p++) {
+          struct ModifyLog& tmp = (*p);
+          std::atomic<Node<T>*> * tmp_atomic = reinterpret_cast<std::atomic<Node<T>*> *>(tmp.m_root);
+          std::atomic_compare_exchange_weak(tmp_atomic, &tmp.m_root_old, tmp.m_root_new);
+        }
+        modlog.compare_exchange_weak(cur, 0);
+        
+      }
+      BST_synobj& operator =(BST_synobj& that)
+      {
+        that.apply_mod();
+        root=that.root;
+        idx_=that.idx_;
+        modlog=0;
+        return *this;
+      }
+    };
+    std::atomic <struct BST_synobj*> state;
+    public:
+    public:
+    BST ()  {
+       struct BST_synobj* state_tmp=new BST_synobj ();
+       state_tmp->idx_ = 0;
+       state_tmp->root = nullptr;
+       state = state_tmp;
+    }
+    ;
+    void insert(T t) ;
+    void remove(T& t) ;
+    bool contains(T& v) ;
+    bool isEmpty() ;
+    std::string toString() {
+       struct BST_synobj* __res;
+       state.load()->apply_mod();
+       __res=state.load();
+       return "Elements: "+std::to_string(__res->idx_);
+    }
+    private:
+    ;
+    ;
+    Node<T>* search(Node<T>* rootNode,T& value) ;
+    Node<T>* findMin() ;
+    void transplant(Node<T>* u,Node<T>* v) ;
+  };
+template <typename T>
+void BST<T>::insert(T newItem) {
+   struct BST_synobj* oldstate;
+   struct BST_synobj* newstate;
+   int __ret__9=0;
+   state.load()->apply_mod();
+   T& _b4_v=newItem;
+   int __ret__1=-1;
+   T& _b6_value=_b4_v;
+   Node<T>* __ret__3=(Node<T>*)(-1);
+   if (__ret__1!=true)  
+     {
+        __ret__1 = false;
+     }
+   if (__ret__1)  
+     {
+        __ret__9 = 1;
+     }
+   Node<T>* _b4_rootNode=(Node<T>*)(-1);
+   Node<T>* _b6_current=(Node<T>*)(-1);
+   newstate = new struct BST_synobj();
+   while (true) 
+   {
+     oldstate=state.load();
+     *newstate = *oldstate;
+     Node<T>* current_left_copy=0;
+     Node<T>* current_right_copy=0;
+     _b4_rootNode = newstate->root;
+     _b6_current = _b4_rootNode;
+     if (_b6_current==nullptr||_b6_current->value==_b6_value)  
+       {
+          __ret__3 = _b6_current;
+       }
+     else if (_b6_value<_b6_current->value)  
+       {
+          __ret__3 = search(_b6_current->left,_b6_value);
+       }
+     else  
+       {
+          __ret__3 = search(_b6_current->right,_b6_value);
+       }
+     if (__ret__3!=nullptr)  
+       {
+          __ret__1 = true;
+       }
+     if (__ret__9!=1)  
+       {
+          Node<T>* newNode=new Node<T> (newItem);
+          if (newstate->root==nullptr)  
+            {
+               newstate->root = newNode;
+               __ret__9 = 1;
+            }
+          if (__ret__9!=1)  
+            {
+               Node<T>* newNodeParent=nullptr;
+               Node<T>* current=newstate->root;
+               while (current!=nullptr)  
+                 {
+                    newNodeParent = current;
+                    if (newNode->value<current->value)  
+                      {
+                         if (current->left != 0) current_left_copy = new Node<T>(*current->left);
+                         else current_left_copy = 0;
+                         current->left = current_left_copy;
+                         current = current_left_copy;
+                      }
+                    else  
+                      {
+                         if (current->right != 0) current_right_copy = new Node<T>(*current->right);
+                         else current_right_copy = 0;
+                         current->right = current_right_copy;
+                         current = current_right_copy;
+                      }
+                 }
+               newNode->parent = newNodeParent;
+               if (newNode->value<newNodeParent->value)  
+                 {
+                    newNodeParent->left = newNode;
+                 }
+               else  
+                 {
+                    newNodeParent->right = newNode;
+                 }
+               newstate->idx_++;
+            }
+       }
+     if (state.compare_exchange_strong(oldstate,newstate)) 
+     {
+      state.load()->apply_mod();
+      break;
+     }
+   }
+   return ;
+}
+template <typename T>
+void BST<T>::remove(T& t) {
+   struct BST_synobj* oldstate;
+   struct BST_synobj* newstate;
+   int __ret__10=0;
+   state.load()->apply_mod();
+   int __ret__2=-1;
+   newstate = new struct BST_synobj();
+   while (true) 
+   {
+     oldstate=state.load();
+     *newstate = *oldstate;
+     Node<T>* u_parent_left_copy=0;
+     Node<T>* u_parent_right_copy=0;
+     Node<T>* v_parent_copy=0;
+     Node<T>* successor_right_copy=0;
+     Node<T>* successor_right_parent_copy=0;
+     Node<T>* successor_left_copy=0;
+     Node<T>* successor_left_parent_copy=0;
+     __ret__2 = newstate->idx_<=0;
+     if (__ret__2)  
+       {
+          __ret__10 = 1;
+       }
+     if (__ret__10!=1)  
+       {
+          Node<T>* nodeToRemove=newstate->root;
+          while (nodeToRemove!=nullptr)  
+            {
+               if (t==nodeToRemove->value)  
+                 {
+                    break;
+                 }
+               else if (t<nodeToRemove->value)  
+                 {
+                    nodeToRemove = nodeToRemove->left;
+                 }
+               else  
+                 {
+                    nodeToRemove = nodeToRemove->right;
+                 }
+            }
+          if (nodeToRemove==nullptr)  
+            {
+               __ret__10 = 1;
+            }
+          if (__ret__10!=1)  
+            {
+               if (nodeToRemove->left==nullptr)  
+                 {
+                    Node<T>* u=nodeToRemove;
+                    Node<T>* v=nodeToRemove->right;
+                    if (u->parent==nullptr)  
+                      {
+                         newstate->root = v;
+                      }
+                    else if (u==u->parent->left)  
+                      {
+                         u_parent_left_copy = v;
+                         newstate->insert_mod(&(u->parent->left),u->parent->left,u_parent_left_copy);
+                      }
+                    else  
+                      {
+                         u_parent_right_copy = v;
+                         newstate->insert_mod(&(u->parent->right),u->parent->right,u_parent_right_copy);
+                      }
+                    if (v!=nullptr)  
+                      {
+                         v_parent_copy = u->parent;
+                         newstate->insert_mod(&(v->parent),v->parent,v_parent_copy);
+                      }
+                 }
+               else if (nodeToRemove->right==nullptr)  
+                 {
+                    Node<T>* u=nodeToRemove;
+                    Node<T>* v=nodeToRemove->left;
+                    if (u->parent==nullptr)  
+                      {
+                         newstate->root = v;
+                      }
+                    else if (u==u->parent->left)  
+                      {
+                         u_parent_left_copy = v;
+                         newstate->insert_mod(&(u->parent->left),u->parent->left,u_parent_left_copy);
+                      }
+                    else  
+                      {
+                         u_parent_right_copy = v;
+                         newstate->insert_mod(&(u->parent->right),u->parent->right,u_parent_right_copy);
+                      }
+                    if (v!=nullptr)  
+                      {
+                         v_parent_copy = u->parent;
+                         newstate->insert_mod(&(v->parent),v->parent,v_parent_copy);
+                      }
+                 }
+               else  
+                 {
+                    Node<T>* successor=(Node<T>*)(-1);
+                    {
+                       Node<T>* current=newstate->root;
+                       while (current->left!=nullptr)  
+                         {
+                            current = current->left;
+                         }
+                       successor = current;
+                    }
+                    if (successor->parent!=nodeToRemove)  
+                      {
+                         {
+                            Node<T>* u=successor;
+                            Node<T>* v=successor->right;
+                            if (u->parent==nullptr)  
+                              {
+                                 newstate->root = v;
+                              }
+                            else if (u==u->parent->left)  
+                              {
+                                 u_parent_left_copy = v;
+                                 newstate->insert_mod(&(u->parent->left),u->parent->left,u_parent_left_copy);
+                              }
+                            else  
+                              {
+                                 u_parent_right_copy = v;
+                                 newstate->insert_mod(&(u->parent->right),u->parent->right,u_parent_right_copy);
+                              }
+                            if (v!=nullptr)  
+                              {
+                                 v_parent_copy = u->parent;
+                                 newstate->insert_mod(&(v->parent),v->parent,v_parent_copy);
+                              }
+                         }
+                         successor_right_copy = nodeToRemove->right;
+                         newstate->insert_mod(&(successor->right),successor->right,successor_right_copy);
+                         successor_right_parent_copy = successor;
+                         newstate->insert_mod(&(successor->right->parent),successor->right->parent,successor_right_parent_copy);
+                      }
+                    {
+                       Node<T>* u=nodeToRemove;
+                       Node<T>* v=successor;
+                       if (u->parent==nullptr)  
+                         {
+                            newstate->root = v;
+                         }
+                       else if (u==u->parent->left)  
+                         {
+                            u_parent_left_copy = v;
+                            newstate->insert_mod(&(u->parent->left),u->parent->left,u_parent_left_copy);
+                         }
+                       else  
+                         {
+                            u_parent_right_copy = v;
+                            newstate->insert_mod(&(u->parent->right),u->parent->right,u_parent_right_copy);
+                         }
+                       if (v!=nullptr)  
+                         {
+                            v_parent_copy = u->parent;
+                            newstate->insert_mod(&(v->parent),v->parent,v_parent_copy);
+                         }
+                    }
+                    successor_left_copy = nodeToRemove->left;
+                    newstate->insert_mod(&(successor->left),successor->left,successor_left_copy);
+                    successor_left_parent_copy = successor;
+                    newstate->insert_mod(&(successor->left->parent),successor->left->parent,successor_left_parent_copy);
+                 }
+               newstate->idx_--;
+            }
+       }
+     if (state.compare_exchange_strong(oldstate,newstate)) 
+     {
+      state.load()->apply_mod();
+      break;
+     }
+   }
+   return ;
+}
+template <typename T>
+void BST<T>::transplant(Node<T>* u,Node<T>* v) {
+   if (u->parent==nullptr)  
+     {
+        state->root = v;
+     }
+   else if (u==u->parent->left)  
+     {
+        u->parent->left = v;
+     }
+   else  
+     {
+        u->parent->right = v;
+     }
+   if (v!=nullptr)  
+     {
+        v->parent = u->parent;
+     }
+}
+template <typename T>
+bool BST<T>::contains(T& v) {
+   struct BST_synobj* __res;
+   int __ret__11=-1;
+   state.load()->apply_mod();
+   T& _b50_value=v;
+   Node<T>* __ret__4=(Node<T>*)(-1);
+   if (__ret__11!=true)  
+     {
+        __ret__11 = false;
+     }
+   Node<T>* _b50_rootNode=(Node<T>*)(-1);
+   Node<T>* current=(Node<T>*)(-1);
+   __res=state.load();
+   _b50_rootNode = __res->root;
+   current = _b50_rootNode;
+   if (current==nullptr||current->value==_b50_value)  
+     {
+        __ret__4 = current;
+     }
+   else if (_b50_value<current->value)  
+     {
+        __ret__4 = search(current->left,_b50_value);
+     }
+   else  
+     {
+        __ret__4 = search(current->right,_b50_value);
+     }
+   if (__ret__4!=nullptr)  
+     {
+        __ret__11 = true;
+     }
+   return __ret__11;
+}
+template <typename T>
+Node<T>* BST<T>::search(Node<T>* rootNode,T& value) {
+   Node<T>* current=rootNode;
+   if (current==nullptr||current->value==value)  
+     {
+        return current;
+     }
+   else if (value<current->value)  
+     {
+        return search(current->left,value);
+     }
+   else  
+     {
+        return search(current->right,value);
+     }
+}
+template <typename T>
+Node<T>* BST<T>::findMin() {
+   Node<T>* current=state->root;
+   while (current->left!=nullptr)  
+     {
+        current = current->left;
+     }
+   return current;
+}
+template <typename T>
+bool BST<T>::isEmpty() {
+   struct BST_synobj* __res;
+   state.load()->apply_mod();
+   __res=state.load();
+   return __res->idx_<=0;
+}

@@ -1,0 +1,287 @@
+    std::size_t size() {return counter;}
+    bool empty () {
+        return (counter < 1);
+    }
+    void push_front(T x) {
+        list_node<T> *new_node = new list_node<T>;
+        new_node->value = x;
+        new_node->next = headp;
+        new_node->prev = new_node;
+        headp->prev = new_node;
+        headp = new_node;
+        if (counter == 0) tailp = new_node;
+        counter ++;
+    }
+    void push_back(T x) {
+        list_node<T> *new_node = new list_node<T>;
+        new_node->value = x;
+        if (counter == 0) {
+            headp = tailp = new_node;
+            new_node->prev = new_node;
+            new_node->next = nil;
+            nil->prev = new_node;
+        } else {
+            new_node->next = nil;
+            new_node->prev = tailp;
+            nil->prev = new_node;
+            tailp->next = new_node;
+            tailp = new_node;
+        }
+        counter ++;
+    }
+    T pop_front() {
+        T res;
+        if (counter > 1) {
+            res = headp->value;
+            list_node<T> *tmp_headp = headp;
+            headp = headp->next;
+            headp->prev = headp;
+            delete tmp_headp;
+            counter --;
+        } else if (counter == 1) {
+            list_node<T> *tmp_headp = headp;
+            headp = tailp = nil;
+            nil->prev = nil;
+            res = tmp_headp->value;
+            delete tmp_headp;
+            counter --;
+        }
+        return res;
+    }
+    T pop_back() {
+        T res;
+        if (counter > 1) {
+            res = tailp->value;
+            list_node<T> *tmp_tailp = tailp;
+            tailp = tailp->prev;
+            tailp->next = nil;
+            nil->prev = tailp;
+            delete tmp_tailp;
+            counter --;
+        } else if (counter == 1) {
+            res = tailp->value;
+            list_node<T> *tmp_tailp = tailp;
+            headp = tailp = nil;
+            nil->prev = nil;
+            delete tmp_tailp;
+            counter --;
+        }
+        return res;
+    }
+--------------------------------
+    reference operator[] (std::size_t n) {
+        int i;
+        list_node<T> *p;
+        for (i = 0, p = headp; (i < n)&&(p!=nil); i++, p = p->next);
+        return p->value;
+    }
+    reference front() {
+        return headp->value;
+    }
+    reference back() {
+        return tailp->value;
+    }
+    iterator insert(iterator pos, T x) {
+        list_node<T> *new_node = new list_node<T>;
+        new_node->value = x;
+        if (pos.node == headp) {
+            new_node->next = headp;
+            new_node->prev = new_node;
+            headp->prev = new_node;
+            headp = new_node;
+            if (counter == 0) tailp = new_node;
+        } else {
+            list_node<T> *new_prev = pos.node->prev;
+            new_node->prev = new_prev;
+            new_node->next = pos.node;
+            new_prev->next = new_node;
+            pos.node->prev = new_node;
+            if (pos.node == nil) tailp = new_node;
+        }
+        counter ++;
+        iterator it;
+        it.node = new_node;
+        return it;
+    }
+    iterator erase(iterator pos) {
+        list_node<T> *curr = pos.node;
+        if (curr == headp) {
+            headp = headp->next;
+            headp->prev = headp;
+            if (counter == 1) tailp = headp;
+            counter --;
+            delete curr;
+            iterator it;
+            it.node = headp;
+            return it;
+        } else {
+            list_node<T> *tmp_prev = curr->prev;
+            list_node<T> *tmp_next = curr->next;
+            tmp_next->prev = tmp_prev;
+            tmp_prev->next = tmp_next;
+            if (curr == tailp) tailp = tmp_prev;
+            delete curr;
+            counter --;
+            iterator it;
+            it.node = tmp_next;
+            return it;
+        }
+    }
+    iterator find (T t) {
+        iterator it = begin();
+        while (it != end()) {
+            if (*it == t) break;
+            else it ++;
+        }
+        return it;
+    }
+    void bubble_sort() {
+        iterator mark;
+        iterator min_mark;
+        iterator start = begin();
+        T tmp;
+        while (start != end()) {
+            min_mark = start;
+            mark = start;
+            mark ++;
+            while (mark != end()) {
+                if (*mark < *min_mark) min_mark = mark;
+                mark ++;
+            }
+            if (min_mark != start) {
+                tmp = *min_mark;
+                *min_mark = *start;
+                *start = tmp;
+            }
+            start ++;
+        }
+    }
+    void sub_merge_sort_copy (iterator range_start, int n) {
+        T tmp;
+        if (n == 1) return;
+        else if (n == 2) {
+            iterator range_end = range_start + 1;
+            if (*range_end < *range_start) {
+                tmp = *range_start;
+                *range_start = *range_end;
+                *range_end = tmp;
+            }
+        } else {
+            iterator it_i = range_start;
+            iterator it_j = range_start + n/2;
+            int i = 0, j = 0, k = 0;
+            int while_i = n / 2;
+            int while_j = n - n / 2;
+
+            sub_merge_sort_copy(it_i, while_i);
+            sub_merge_sort_copy(it_j, while_j);
+            T tmp_array [n];
+            while ((i < while_i)&&(j < while_j)) {
+                if (*it_i < *it_j) {
+                    tmp_array[k] = *it_i;
+                    it_i ++;
+                    i ++;
+                } else {
+                    tmp_array[k] = *it_j;
+                    it_j ++;
+                    j ++;
+                }
+                k ++;
+            }
+            while (i < while_i) {
+                tmp_array[k] = *it_i;
+                k ++;
+                i ++;
+                it_i ++;
+            }
+            while (j < while_j) {
+                tmp_array[k] = *it_j;
+                k ++;
+                j ++;
+                it_j ++;
+            }
+            for ( i = 0, it_i = range_start; i < n; i++, it_i ++) {
+                *it_i = tmp_array[i];
+            }
+        }
+    }
+    iterator sub_merge_sort_noncopy (iterator range_start, int n) {
+        iterator it;
+        if (n == 1) return range_start;
+        else if (n == 2) {
+            iterator range_end = range_start + 1;
+            if (*range_end < *range_start) {
+                if (range_start.node == headp) {
+                    range_start.node->next = range_end.node->next;
+                    range_end.node->prev = range_end.node;
+                    range_start.node->prev = range_end.node;
+                    range_end.node->next = range_start.node;
+                    headp = range_end.node;
+                } else {
+                    range_start.node->next = range_end.node->next;
+                    range_end.node->prev = range_start.node->prev;
+                    range_start.node->prev = range_end.node;
+                    range_end.node->next = range_start.node;
+                }
+                return range_end;
+            } else {
+                return range_start;
+            }
+        } else {
+            iterator it_i = range_start;
+            iterator it_j = range_start + n/2;
+            int i = 0, j = 0, k = 0;
+            int while_i = n / 2;
+            int while_j = n - n / 2;
+
+            it_i = sub_merge_sort_noncopy(it_i, while_i);
+            it_j = sub_merge_sort_noncopy(it_j, while_j);
+
+            iterator new_begin;
+            iterator mark;
+            new_begin.node = new list_node<T>;
+            mark.node = new_begin.node;
+            T tmp_array [n];
+            while ((i < while_i)&&(j < while_j)) {
+                if (*it_i < *it_j) {
+                    mark.node->next =
+                    tmp_array[k] = *it_i;
+                    it_i ++;
+                    i ++;
+                } else {
+                    tmp_array[k] = *it_j;
+                    it_j ++;
+                    j ++;
+                }
+                k ++;
+            }
+            while (i < while_i) {
+                tmp_array[k] = *it_i;
+                k ++;
+                i ++;
+                it_i ++;
+            }
+            while (j < while_j) {
+                tmp_array[k] = *it_j;
+                k ++;
+                j ++;
+                it_j ++;
+            }
+            for ( i = 0, it_i = range_start; i < n; i++, it_i ++) {
+                *it_i = tmp_array[i];
+            }
+        }
+    }
+    void merge_sort() {
+        sub_merge_sort_copy(begin(), counter);
+    }
+    iterator begin() {
+        iterator it;
+        it.node = headp;
+        return it;
+    }
+    iterator end() {
+        iterator it;
+        it.node = nil;
+        return it;
+    }

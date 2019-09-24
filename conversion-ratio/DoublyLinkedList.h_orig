@@ -1,0 +1,122 @@
+    DoublyLinkedEntryWrap<T>* AppendLast( const T& o )
+     {
+       DoublyLinkedEntryWrap<T> *e = new DoublyLinkedEntryWrap<T>( o );
+       LinkAfter(e, head.prev);
+       return e;
+     }
+    DoublyLinkedEntryWrap<T>* PushFirst( const T& o )
+     {
+       DoublyLinkedEntryWrap<T> *e = new DoublyLinkedEntryWrap<T>( o );
+       LinkBefore(e, head.next);
+       return e;
+     }
+    DoublyLinkedEntryWrap<T>* PopFirst()
+     {
+       DoublyLinkedEntryWrap<T> *e = First();
+       if (e != 0) Unlink(e);
+       return e;
+     }
+    void push_front(const T& o) { PushFirst(o); }
+    void Delete( DoublyLinkedEntryWrap<T>* e)
+     {
+       Unlink(e);
+       delete e;
+     }
+    void DeleteAll()
+    {
+       while (count)
+           Delete(head.next);
+    }
+    void clear() { DeleteAll(); }
+    unsigned NumberOfEntries() const { return count; }
+    unsigned size() const { return count; }
+    void Reverse()
+     {  if (count == 0)
+              return;
+        DoublyLinkedEntryWrap<T>* tmp = &head, *tmp1 = tmp->next;
+        head.next = head.prev;
+        head.prev = tmp1;
+        while (tmp != head.next) {
+          DoublyLinkedEntryWrap<T>* tmp2 = tmp;
+          tmp = tmp1;
+          tmp1 = tmp1->next;
+          tmp->next = tmp2;
+          tmp->prev = tmp1;
+        }
+     }
+    void push_back( const T& o ) { AppendLast(o); }
+--------------------
+    void erase( iterator& p) { Delete(p.CurrentPtr()); }
+    const_iterator begin() const { return Iterator(*this); }
+    const_iterator end() const { return Iterator(*this, 0); }
+    iterator begin() { return Iterator(*this); }
+    iterator end() { return Iterator(*this, 0); }
+    DoublyLinkedEntryWrap<T>* First() const
+          {
+            DoublyLinkedEntryWrap<T>* r = (count == 0)? 0 : head.next;
+            assert( r == 0 || r->o != 0);
+            return r;
+          }
+    T& front() const { return First()->GetEntry(); }
+    DoublyLinkedEntryWrap<T>* Last() const
+          {
+            DoublyLinkedEntryWrap<T>* r = (count == 0)? 0 : head.prev;
+            assert( r == 0 || r->o != 0); return r;
+          }
+    T& back() const { return Last()->GetEntry(); }
+    DoublyLinkedEntryWrap<T>* Next(const DoublyLinkedEntryWrap<T>* cur) const
+          {
+            DoublyLinkedEntryWrap<T>* r = (cur == head.prev)? 0 : cur->next;
+            assert( r == 0 || r->o != 0); return r;
+          }
+    DoublyLinkedEntryWrap<T>* Prev(DoublyLinkedEntryWrap<T>* cur) const
+          { DoublyLinkedEntryWrap<T>* r = (cur == head.next)? 0 : cur->prev;
+            assert( r == 0 || r->o != 0); return r;
+          }
+    DoublyLinkedEntryWrap<T>* InsertBefore( const T& o , DoublyLinkedEntryWrap<T>* pos)
+     {
+       DoublyLinkedEntryWrap<T> *e = new DoublyLinkedEntryWrap<T>( o );
+       LinkBefore(e, pos);
+       return e;
+     }
+    DoublyLinkedEntryWrap<T>* InsertAfter( const T& o , DoublyLinkedEntryWrap<T>* pos)
+     {
+       DoublyLinkedEntryWrap<T> *e = new DoublyLinkedEntryWrap<T>( o );
+       LinkAfter(e, pos);
+       return e;
+     }
+   void LinkBefore( DoublyLinkedEntryWrap<T> *e, DoublyLinkedEntryWrap<T>* pos)
+     {
+       assert(e->prev == 0 && e->next == 0 && e->o != 0);
+       ++count;
+       e->next = pos;
+       e->prev = pos->prev;
+       pos->prev->next = e;
+       pos->prev = e;
+     }
+   void LinkAfter( DoublyLinkedEntryWrap<T> *e, DoublyLinkedEntryWrap<T>* pos)
+     {
+       assert(e->prev == 0 && e->next == 0 && e->o != 0);
+       ++count;
+       e->prev = pos;
+       e->next = pos->next;
+       pos->next->prev = e;
+       pos->next = e;
+     }
+    void Unlink( DoublyLinkedEntryWrap<T>* e)
+     {
+       --count;
+       if (e->prev != 0)
+           e->prev->next = e->next;
+       if (e->next != 0)
+          e->next->prev = e->prev;
+       e->prev = e->next = 0;
+     }
+    void operator = (const DoublyLinkedListWrap<T> & that)
+     {
+      DeleteAll();
+      for (const_iterator iter(that); !iter.ReachEnd(); iter++) {
+         const T &c = iter.Current();
+         AppendLast(c);
+      }
+     }
